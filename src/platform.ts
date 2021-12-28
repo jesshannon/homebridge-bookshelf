@@ -53,11 +53,11 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
   setupFadeCandy() {
     this.fadeCandy = new FadeCandy();
     this.fadeCandy.on(FadeCandy.events.READY, (fc) => {
-      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 1);
       fc.clut.create();  
     });
     this.fadeCandy.on(FadeCandy.events.COLOR_LUT_READY,  (fc) => {
       this.fadeCandyReady = true;
+      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 0);
     });
   }
 

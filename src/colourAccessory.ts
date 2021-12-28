@@ -92,9 +92,9 @@ export class ColourAccessory {
   }
 
   async updateLights() {
-    var length = 60;
+    var length = 384;
 
-    var color = this.hslToRgb(this.hue / 360, this.saturation / 100, this.brightness / 100);
+    var color = this.hslToRgb(this.hue / 360, this.saturation / 100, this.brightness / 120); // scaled max brightness down
 
     this.platform.log.debug('Setting RGB ->', color);
 

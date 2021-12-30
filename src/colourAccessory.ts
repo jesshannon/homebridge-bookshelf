@@ -1,41 +1,29 @@
 import { Int16 } from 'hap-nodejs';
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
-
+import { BaseAccessory } from './baseAccessory';
 import { BookshelfPlatform } from './platform';
 
-export class ColourAccessory {
-  private service: Service;
+export class ColourAccessory extends BaseAccessory {
 
   private brightness: number = 0; 
   private hue: number = 0;
   private saturation: number = 0;
 
+  actualBrightness: number = 0;
+  actualHue: number = 0;
+  actualSaturation: number = 0;
+
+  private interval: number = 0;
+
   constructor(
-    private readonly platform: BookshelfPlatform,
-    private readonly accessory: PlatformAccessory,
+    platform: BookshelfPlatform,
+    accessory: PlatformAccessory,
   ) {
 
-    // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Jess Shannon')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Bookshelf Light')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Bookshelf-colour');
-
-    // get the LightBulb service if it exists, otherwise create a new LightBulb service
-    // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.Lightbulb) || this.accessory.addService(this.platform.Service.Lightbulb);
-
-    // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, accessory.context.device.displayName);
+    super(platform, accessory);
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
-
-    // register handlers for the On/Off Characteristic
-    this.service.getCharacteristic(this.platform.Characteristic.On)
-        .onSet(this.setOn.bind(this))
-        .onGet(this.getOn.bind(this));
 
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
@@ -52,13 +40,25 @@ export class ColourAccessory {
 
   }
 
+  public stop() {
+      clearInterval(this.interval as any as NodeJS.Timeout);
+  }
+
   async setOn(value: CharacteristicValue) {
+
+        if(value){
+            //this.stop();
+            //this.interval = setTimeout(()=>this.updateLights(), 100) as any as number;
+        }
+
       if(value && this.brightness == 0){
         this.brightness = 50;
       } else if(!value) {
         this.brightness = 0;
       }
+
     this.updateLights();
+      
     this.platform.log.debug('Set Characteristic On ->', value);
   }
 
@@ -92,6 +92,11 @@ export class ColourAccessory {
   }
 
   async updateLights() {
+
+    //this.actualBrightness = this.actualBrightness + ((this.brightness - this.actualBrightness) / 5);
+    //this.actualHue = this.actualHue + ((this.hue - this.actualHue) / 5);
+    //this.actualSaturation = this.actualSaturation + ((this.saturation - this.actualSaturation) / 5);
+
     var length = 384;
 
     var color = this.hslToRgb(this.hue / 360, this.saturation / 100, this.brightness / 120); // scaled max brightness down

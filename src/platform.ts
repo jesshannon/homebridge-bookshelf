@@ -3,6 +3,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { ExamplePlatformAccessory } from './platformAccessory';
 import { ColourAccessory } from './colourAccessory';
 import FadeCandy = require('node-fadecandy');
+import { BaseAccessory } from './baseAccessory';
 
 /**
  * HomebridgePlatform
@@ -17,6 +18,8 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
   public readonly accessories: PlatformAccessory[] = [];
 
   public fadeCandy: FadeCandy;
+
+  private currentAccessory?: BaseAccessory;
 
   fadeCandyReady: boolean = false;
 
@@ -39,6 +42,15 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
     });
   }
 
+  public setCurrentAccessory(newAccessory: BaseAccessory){
+
+    if(this.currentAccessory != newAccessory){
+      this.currentAccessory?.stop();
+      this.currentAccessory = newAccessory;
+    }
+
+  }
+
   /**
    * This function is invoked when homebridge restores cached accessories from disk at startup.
    * It should be used to setup event handlers for characteristics and update respective values.
@@ -53,11 +65,11 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
   setupFadeCandy() {
     this.fadeCandy = new FadeCandy();
     this.fadeCandy.on(FadeCandy.events.READY, (fc) => {
+      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 1);
       fc.clut.create();  
     });
     this.fadeCandy.on(FadeCandy.events.COLOR_LUT_READY,  (fc) => {
       this.fadeCandyReady = true;
-      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 0);
     });
   }
 

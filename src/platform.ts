@@ -1,9 +1,13 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic, UnknownContext } from 'homebridge';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { ExamplePlatformAccessory } from './platformAccessory';
 import { ColourAccessory } from './colourAccessory';
+import { RandomAccessory } from './randomAccessory';
 import FadeCandy = require('node-fadecandy');
 import { BaseAccessory } from './baseAccessory';
+import { PainterAccessory } from './painterAccessory';
+import { Shelf } from './shelf';
+import { throws } from 'assert';
 
 /**
  * HomebridgePlatform
@@ -23,6 +27,61 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
 
   fadeCandyReady: boolean = false;
 
+  interval: any = 0;
+  
+  shelfDefinition = [
+    [
+      [[49, 56], [112, 119]],
+
+      [[39, 47], [103, 110]],
+
+      [[29, 37], [92, 101]],
+
+      [[19, 27], [83, 90]],
+
+      [[10, 17], [74, 81]],
+
+      [[0, 8], [64, 72]],
+    ],
+    [
+      [[177, 184], [241, 248]],
+
+      [[167, 175], [231, 239]],
+
+      [[157, 165], [221, 229]],
+
+      [[147, 155], [211, 219]],
+
+      [[138, 145], [202, 209]],
+
+      [[128, 137], [192, 201]],
+    ],
+
+    [
+      [[304, 311], [369, 376]],
+
+      [[295, 303], [359, 367]],
+
+      [[284, 293], [348, 357]],
+
+      [[275, 283], [339, 347]],
+
+      [[266, 273], [330, 337]],
+
+      [[256, 264], [320, 328]],
+    ],
+
+
+  ];
+
+  public bookCase: Shelf[][] = [];
+
+  public allShelves: Shelf[] = [];
+
+  pixelToShelf: Shelf[] = [];
+
+  length = 64 * 6;
+
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -35,17 +94,82 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
     // in order to ensure they weren't added to homebridge already. This event can also be used
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
-      log.debug('Executed didFinishLaunching callback');
-      
+
       this.discoverDevices();
       this.setupFadeCandy();
+
     });
+
+    this.generateShelfMappings();
   }
 
-  public setCurrentAccessory(newAccessory: BaseAccessory){
+  ready(){
+    this.log.debug('Fadecandy ready');
 
-    if(this.currentAccessory != newAccessory){
-      this.currentAccessory?.stop();
+    this.allOff();
+
+    this.interval = global.setInterval(() => this.loop(), 300);
+  }
+
+  generateShelfMappings() {
+
+    this.bookCase = this.shelfDefinition
+      .map((col, c) => col.map((px, r) => new Shelf(c, r, px, [0, 0, 0])));
+
+    this.allShelves = this.bookCase.reduce(function (a, b) { return a.concat(b); }, []);
+    this.pixelToShelf = new Array<Shelf>(this.length);
+    for (let pixel = 0; pixel < this.length; pixel++) {
+      var matched = this.allShelves.filter(sh => sh.Pixels.filter(s => s[0] <= pixel && s[1] >= pixel).length > 0);
+      this.pixelToShelf[pixel] = matched.length > 0 ? matched[0] : (null as any)
+    }
+
+  }
+
+  public renderShelves() {
+
+    let data = new Uint8Array(this.length * 3)
+    for (let pixel = 0; pixel < this.length; pixel++) {
+      let i = 3 * pixel;
+
+      var shelf = this.pixelToShelf[pixel];
+
+      if (shelf) {
+        data[i] = shelf.Colour[0];
+        data[i + 1] = shelf.Colour[1];
+        data[i + 2] = shelf.Colour[2];
+      } else {
+        data[i] = 0;
+        data[i + 1] = 0;
+        data[i + 2] = 0;
+      }
+    }
+
+    this.fadeCandy.send(data);
+
+  }
+
+  public allOff(){
+    this.setAll([0,0,0]);
+  }
+  
+  public setAll(colour: number[]){
+    this.allShelves.forEach(s=>s.Colour = colour);
+  }
+
+  loop() {
+    if (this.currentAccessory) {
+      //this.log.debug('Ping ', this.currentAccessory.displayName );
+      this.currentAccessory.loop();
+    }
+    this.renderShelves();
+  }
+
+  public setCurrentAccessory(newAccessory: BaseAccessory) {
+
+    this.log.debug('Setting active item ', typeof (this.currentAccessory));
+
+    if (this.currentAccessory !== newAccessory) {
+      this.currentAccessory?.switchOff();
       this.currentAccessory = newAccessory;
     }
 
@@ -65,11 +189,12 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
   setupFadeCandy() {
     this.fadeCandy = new FadeCandy();
     this.fadeCandy.on(FadeCandy.events.READY, (fc) => {
-      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 1);
-      fc.clut.create();  
+      fc.config.set(FadeCandy.Configuration.schema.DISABLE_KEYFRAME_INTERPOLATION, 0);
+      fc.clut.create();
     });
-    this.fadeCandy.on(FadeCandy.events.COLOR_LUT_READY,  (fc) => {
+    this.fadeCandy.on(FadeCandy.events.COLOR_LUT_READY, (fc) => {
       this.fadeCandyReady = true;
+      this.ready();
     });
   }
 
@@ -82,34 +207,35 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
 
     const devices = [
       {
-        uniqueId: 'COLR',
+        uniqueId: 'BKSF-COLR',
         displayName: 'Bookshelf',
+        accessoryType: ColourAccessory
+      },
+      {
+        uniqueId: 'BKSF-RAND',
+        displayName: 'Random Shelves',
+        accessoryType: RandomAccessory
+      },
+      {
+        uniqueId: 'BKSF-PAINT',
+        displayName: 'Shelf Canvas',
+        accessoryType: PainterAccessory
       },
     ];
 
     // loop over the discovered devices and register each one if it has not already been registered
     for (const device of devices) {
 
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
       const uuid = this.api.hap.uuid.generate(device.uniqueId);
 
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
       const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
+      var cls = device.accessoryType;
+
       if (existingAccessory) {
-        // the accessory already exists
         this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
-
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new ColourAccessory(this, existingAccessory);
+        new cls!(this, existingAccessory);
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
         // remove platform accessories when no longer present
@@ -128,7 +254,7 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
-        new ColourAccessory(this, accessory);
+        new cls!(this, accessory);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

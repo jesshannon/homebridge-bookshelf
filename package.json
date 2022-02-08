@@ -27,6 +27,8 @@
     "homebridge-plugin"
   ],
   "dependencies": {
+    "azure-iot-device": "^1.17.8",
+    "azure-iot-device-mqtt": "^1.15.8",
     "node-fadecandy": "^2.0.5"
   },
   "devDependencies": {

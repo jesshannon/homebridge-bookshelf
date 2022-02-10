@@ -17,7 +17,7 @@ export class RandomAccessory extends BaseAccessory {
 
     frameCount = 0;
 
-    frameLoop = 17; // how many frames to complete one fade in/out step
+    frameLoop = 10; // how many frames to complete one fade in/out step
 
     colour = [209, 147, 100]; // target colour
 
@@ -47,6 +47,9 @@ export class RandomAccessory extends BaseAccessory {
 
         if(value && !this.isOn){
             this.stack = [];
+            this.stack.push(this.randomShelf(this.stack));
+            this.stack.push(this.randomShelf(this.stack));
+            this.stack.push(this.randomShelf(this.stack));
             this.stack.push(this.randomShelf(this.stack));
             this.stack.push(this.randomShelf(this.stack));
             this.stack.push(this.randomShelf(this.stack));
@@ -90,7 +93,9 @@ export class RandomAccessory extends BaseAccessory {
         }
 
         if (this.frameCount == this.frameLoop - 1) {
-            this.stack.shift();
+            if(this.stack.length > 0){
+                (this.stack.shift() as Shelf).Colour = [0,0,0];
+            }
             this.stack.push(this.randomShelf(this.stack));
         }
 

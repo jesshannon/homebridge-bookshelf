@@ -6,6 +6,7 @@ import { RandomAccessory } from './randomAccessory';
 import FadeCandy = require('node-fadecandy');
 import { BaseAccessory } from './baseAccessory';
 import { PainterAccessory } from './painterAccessory';
+import { FlagAccessory } from './flagAccessory';
 import { Shelf } from './shelf';
 import { throws } from 'assert';
 
@@ -221,6 +222,32 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
         displayName: 'Shelf Canvas',
         accessoryType: PainterAccessory
       },
+      {
+        uniqueId: 'BKSF-TRNS-FLAG',
+        displayName: 'Trans Flag',
+        accessoryType: FlagAccessory,
+        config: [          
+          [115, 123, 240],
+          [240, 10, 224],
+          [235, 235, 210],
+          [235, 235, 210],
+          [240, 10, 224], 
+          [115, 123, 240],
+        ]
+      },
+      {
+        uniqueId: 'BKSF-PRD-FLAG',
+        displayName: 'Pride Flag',
+        accessoryType: FlagAccessory,
+        config: [          
+          [209, 34, 41],
+          [246, 138, 30],
+          [253, 224, 26],
+          [0, 121, 64],
+          [36, 64, 142], 
+          [115, 41, 130],
+        ]
+      },
     ];
 
     // loop over the discovered devices and register each one if it has not already been registered
@@ -235,7 +262,7 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
       if (existingAccessory) {
         this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-        new cls!(this, existingAccessory);
+        new cls!(this, existingAccessory, device.config);
 
         // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
         // remove platform accessories when no longer present
@@ -254,7 +281,7 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
 
         // create the accessory handler for the newly create accessory
         // this is imported from `platformAccessory.ts`
-        new cls!(this, accessory);
+        new cls!(this, accessory, device.config);
 
         // link the accessory to your platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);

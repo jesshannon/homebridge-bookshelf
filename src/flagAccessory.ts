@@ -9,6 +9,8 @@ import { Client, Message } from 'azure-iot-device';
 
 export class FlagAccessory extends BaseAccessory {
 
+    private brightness: number = 100;
+
     isOn: Boolean = false;
 
     config: number[][] = [];
@@ -20,6 +22,10 @@ export class FlagAccessory extends BaseAccessory {
     ) {
         super(platform, accessory);
         this.config = config as number[][];
+        
+        this.service.getCharacteristic(this.platform.Characteristic.Brightness)
+        .onSet(this.setBrightness.bind(this))
+        .onGet(this.getBrightness.bind(this));
     }
 
     async setOn(value: CharacteristicValue) {
@@ -29,7 +35,11 @@ export class FlagAccessory extends BaseAccessory {
         if (this.isOn) {
             this.platform.bookCase.forEach(col => 
                 this.config.forEach((f, i)=>
-                    col[i].Colour = f
+                    col[i].Colour = [
+                        (f[0] * this.brightness) / 100,
+                        (f[1] * this.brightness) / 100,
+                        (f[2] * this.brightness) / 100,
+                    ]
                 ));
         } else {
             this.allOff();
@@ -45,5 +55,13 @@ export class FlagAccessory extends BaseAccessory {
             this.allOff();
         }
     }
+
+    async setBrightness(value: CharacteristicValue) {
+        this.platform.log.debug('Set brightness to ', value);
+        this.brightness = value as number;
+      }
+      async getBrightness(): Promise<CharacteristicValue> {
+        return this.brightness as CharacteristicValue;
+      }
 
 }

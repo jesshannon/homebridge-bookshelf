@@ -46,6 +46,7 @@ export class RandomAccessory extends BaseAccessory {
         this.platform.log.debug(value ? 'Switched On' : 'Switched Off');
 
         if(value && !this.isOn){
+            this.allOff();
             this.stack = [];
             this.stack.push(this.randomShelf(this.stack));
             this.stack.push(this.randomShelf(this.stack));

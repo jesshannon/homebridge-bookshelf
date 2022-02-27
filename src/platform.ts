@@ -9,6 +9,7 @@ import { PainterAccessory } from './painterAccessory';
 import { FlagAccessory } from './flagAccessory';
 import { Shelf } from './shelf';
 import { throws } from 'assert';
+import { TetrisAccessory } from './tetrisAccessory';
 
 /**
  * HomebridgePlatform
@@ -223,6 +224,11 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
         accessoryType: PainterAccessory
       },
       {
+        uniqueId: 'BKSF-TETRIS',
+        displayName: 'Tetris',
+        accessoryType: TetrisAccessory
+      },
+      {
         uniqueId: 'BKSF-TRNS-FLAG',
         displayName: 'Trans Flag',
         accessoryType: FlagAccessory,
@@ -230,9 +236,10 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
           [115, 123, 240],
           [240, 10, 224],
           [235, 235, 210],
-          [235, 235, 210],
+          //[235, 235, 210],
           [240, 10, 224], 
           [115, 123, 240],
+          [0, 0, 0],
         ]
       },
       {

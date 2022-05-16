@@ -81,10 +81,7 @@ export class ColourAccessory extends BaseAccessory {
       this.allOff();
       return;
     }
-
-    var color = this.hslToRgb(this.hue / 360, this.saturation / 100, this.brightness / 120); // scaled max brightness down
-    this.setAll(color);
-
+    this.setAll(this.hueSatBriToRGB(this.hue, this.saturation, this.brightness));
 
   }
 

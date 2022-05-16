@@ -70,6 +70,17 @@ export abstract class BaseAccessory {
   abstract setOn(value: CharacteristicValue);
   abstract getOn(): Promise<CharacteristicValue>;
 
+  hueSatBriToRGB(hue, saturation, brightness){
+    
+    // this produces a colour that better matches the display in HomeKit
+    var color = this.hslToRgb(hue / 360, saturation / 100, 0.5);
+
+    var max = Math.max(...color);
+
+    var adjustedColor = color.map(c=>c * ((brightness * 2.55) / max));
+
+    return adjustedColor;
+  }
 
   hslToRgb(h, s, l) {
     var r, g, b;

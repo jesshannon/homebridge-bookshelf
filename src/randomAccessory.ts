@@ -67,7 +67,7 @@ export class RandomAccessory extends BaseAccessory {
 
     public async loop() {
 
-        this.colour = this.hslToRgb(this.hue / 360, this.saturation / 100, this.brightness / 120); // scaled max brightness down
+        this.colour = this.hueSatBriToRGB(this.hue, this.saturation, this.brightness);
 
         if (!this.isOn) {
             this.allOff();

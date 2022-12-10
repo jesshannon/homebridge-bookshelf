@@ -7,6 +7,7 @@ import FadeCandy = require('node-fadecandy');
 import { BaseAccessory } from './baseAccessory';
 import { PainterAccessory } from './painterAccessory';
 import { FlagAccessory } from './flagAccessory';
+import { GridAccessory } from './gridAccessory';
 import { Shelf } from './shelf';
 import { throws } from 'assert';
 import { TetrisAccessory } from './tetrisAccessory';
@@ -253,6 +254,37 @@ export class BookshelfPlatform implements DynamicPlatformPlugin {
           [0, 121, 64],
           [36, 64, 142], 
           [115, 41, 130],
+        ]
+      },
+      {
+        uniqueId: 'BKSF-ENG-FLAG',
+        displayName: 'England Flag',
+        accessoryType: GridAccessory,
+        config: [
+          [
+            [235, 235, 210],
+            [235, 235, 210],
+            [209, 34, 41],
+            [209, 34, 41],
+            [235, 235, 210],
+            [235, 235, 210]
+          ],
+          [
+            [209, 34, 41],
+            [209, 34, 41],
+            [209, 34, 41],
+            [209, 34, 41],
+            [209, 34, 41],
+            [209, 34, 41],
+          ],
+          [
+            [235, 235, 210],
+            [235, 235, 210],
+            [209, 34, 41],
+            [209, 34, 41],
+            [235, 235, 210],
+            [235, 235, 210]
+          ],
         ]
       },
     ];

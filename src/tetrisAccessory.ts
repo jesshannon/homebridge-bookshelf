@@ -2,6 +2,7 @@ import { Int16 } from 'hap-nodejs';
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { BaseAccessory } from './baseAccessory';
 import { BookshelfPlatform } from './platform';
+import { Shelf } from './shelf';
 
 export class TetrisAccessory extends BaseAccessory {
 
@@ -52,7 +53,11 @@ export class TetrisAccessory extends BaseAccessory {
     currentPosition = -1;
 
     animFrame() {
-        if(this.currentPosition < 0){
+        if(this.currentPosition < -1)
+        {
+            this.currentPosition++;
+        }
+        else if(this.currentPosition < 0){
             // start new column
             this.currentColumn = Math.floor(Math.random() * this.platform.bookCase.length);
             this.platform.bookCase[this.currentColumn][0].Colour = this.colours[Math.floor(Math.random() * this.colours.length)];
@@ -65,19 +70,39 @@ export class TetrisAccessory extends BaseAccessory {
                 column.length > this.currentPosition+1 &&
                 this.arraysEqual(column[this.currentPosition+1].Colour, [0,0,0]))
                 {
-
                     column[this.currentPosition+1].Colour = column[this.currentPosition].Colour;
                     column[this.currentPosition].Colour = [0,0,0];
                     this.currentPosition++;
                 } else if(this.currentPosition == 0){
-                    this.currentPosition = -1;
-                    this.allOff();
+                    this.currentPosition = -4;
+                    this.resetColumn(column);
                 } else {
                     this.currentPosition = -1;
                 }
-                
         }
     }
+    
+    resetColumn(column: Shelf[]) {
+        var speed = 1.5;
+        var prevColour : number[];
+
+        var fall = () => {
+            
+            column.forEach((shelf: Shelf, index: number)=>{
+                var tempColour = shelf.Colour;
+                shelf.Colour = index == 0 ? [0,0,0] : prevColour;
+                prevColour = tempColour;
+            });
+
+            if(!this.arraysEqual(column[column.length-1].Colour,[0,0,0])){
+                speed = speed * 2;
+                setTimeout(fall, 1000/speed);
+            }
+            this.renderShelves();
+        };
+        setTimeout(fall, 1000/speed);
+    }
+
 
     arraysEqual(a, b) {
         if (a === b) return true;
